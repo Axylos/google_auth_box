@@ -22,14 +22,39 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby 
+require './lib/google_auth_box/client'
+f = File.new './secret.json'
 
-## Development
+# go to google developer console
+# to enable an api and download client_secrets as a json file
+# then just load it and pass it as a Hash to the GAB::Client
+client_data = JSON.parse(f.read)
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+# the client also takes scopes, a plain file for the data store
+# and a callback where the refresh tokens will be sent
+# don't worry about a refresh token, just expost an endpoint
+# that can take a url with a query string param "code"
+# and mayb gree the user with a nice response ;)
+client = GoogleAuthBox::Client.new(
+  client_id_hash: client_data,
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  data_file_path: './data.yml',
+  base_uri: 'http://mycooluri/oathcallback'
+)
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+# grab this and send it to the user
+p client.get_auth_url
 
-## Contributing
+# sometime later
+# this would probably involve sending the url and receiving a api call
+# with the base_uri above.  the query param "code" will contain the
+# refresh token for google auth
+code = '5/alongcode'
+client.save_creds 7, code
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/google_auth_box.
+# at this point the client with an id 7 will have their credentials persisted
+p client.get_creds 7
+
+```
+
